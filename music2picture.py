@@ -233,7 +233,7 @@ def estimate_bpm(rms, sample_rate=22050, hop=512):
         envelope /= np.max(np.abs(envelope))
 
     frame_rate = sample_rate / hop
-    min_lag = max(1, int(frame_rate * 60 / 240))
+    min_lag = max(1, int(frame_rate * 60 / 200))
     max_lag = min(len(envelope) - 1, int(frame_rate * 60 / 30))
     if max_lag <= min_lag:
         return 120.0
@@ -243,9 +243,9 @@ def estimate_bpm(rms, sample_rate=22050, hop=512):
     bpm = 60 * frame_rate / best_lag
     while bpm < 30:
         bpm *= 2
-    while bpm > 240:
+    while bpm > 200:
         bpm /= 2
-    return float(np.clip(bpm, 30, 240))
+    return float(np.clip(bpm, 30, 200))
 
 
 def estimate_bpm_curve_from_bass(bass, output_size, sample_rate=22050, hop=512, window_seconds=15):
@@ -269,10 +269,10 @@ def estimate_bpm_curve_from_bass(bass, output_size, sample_rate=22050, hop=512, 
     for start in range(0, bass.size, frames_per_window):
         end = min(bass.size, start + frames_per_window)
         bpm = int(np.count_nonzero(peak_mask[start:end])) * (60.0 / window_seconds)
-        if bpm < 30 or bpm > 240:
+        if bpm < 30 or bpm > 200:
             bpm = global_bpm
         centers.append((start + end - 1) / 2)
-        bpm_values.append(float(np.clip(bpm, 30, 240)))
+        bpm_values.append(float(np.clip(bpm, 30, 200)))
 
     if len(centers) == 1:
         return np.full(output_size, bpm_values[0], dtype=np.float32)
@@ -282,7 +282,7 @@ def estimate_bpm_curve_from_bass(bass, output_size, sample_rate=22050, hop=512, 
     curve = np.interp(target, source, np.asarray(bpm_values, dtype=np.float32))
     for _ in range(3):
         curve = (curve * 3 + np.roll(curve, 1) + np.roll(curve, -1)) / 5
-    return np.clip(curve, 30, 240).astype(np.float32)
+    return np.clip(curve, 30, 200).astype(np.float32)
 
 
 def peak_emphasis(values):
@@ -300,7 +300,7 @@ def peak_emphasis(values):
 
 
 def bpm_to_hue(bpm):
-    position = np.clip((bpm - 30.0) / 210.0, 0, 1)
+    position = np.clip((bpm - 40.0) / 160.0, 0, 1)
     return 0.78 * position
 
 
@@ -371,9 +371,12 @@ def render_random_cover(spec, rms, bass, mids, highs, size, patterns=2, bpm=120.
     bpm_sigma = 3.0 + 3.0 * peak_rows
     pixel_bpm = rng.normal(local_bpm, bpm_sigma).astype(np.float32)
     pixel_bpm -= np.mean(pixel_bpm, axis=1, keepdims=True) - np.mean(local_bpm, axis=1, keepdims=True)
-    pixel_bpm = np.clip(pixel_bpm, 30, 240)
+    pixel_bpm = np.clip(pixel_bpm, 30, 200)
 
-    hue = np.mod(bpm_to_hue(pixel_bpm) + (field_a - 0.5) * 0.035 + spectrum_value * 0.018, 1.0)
+    hue_shift = (field_a - 0.5) * 0.035 + spectrum_value * 0.018
+    red_lock = np.clip((40.0 - pixel_bpm) / 10.0, 0, 1)
+    hue_shift = np.where(red_lock > 0, np.minimum(hue_shift, 0), hue_shift)
+    hue = np.mod(bpm_to_hue(pixel_bpm) + hue_shift, 1.0)
     bass_map = bass_line[part_idx]
     high_map = highs_line[part_idx]
     saturation = np.clip(0.54 + spectrum_value * 0.24 + high_map * 0.10 + peak_rows * 0.18, 0, 1)

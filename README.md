@@ -239,6 +239,8 @@ FFmpeg декодирует песню в моно-сигнал.
 BPM = количество ударов баса за 15 секунд * 4
 ```
 
+Значение BPM ограничивается рабочим диапазоном `30-200`. Если локальная оценка выходит за этот диапазон, используется общая оценка BPM для песни.
+
 ### 4. Случайный BPM для каждого пикселя
 
 Каждый пиксель получает свой случайный BPM рядом с BPM текущего отрезка.
@@ -250,9 +252,11 @@ BPM = количество ударов баса за 15 секунд * 4
 Цвет зависит от BPM:
 
 ```text
-ближе к 30 BPM  -> красная зона
-ближе к 240 BPM -> фиолетовая зона
+30-40 BPM       -> красная зона
+ближе к 200 BPM -> фиолетовая зона
 ```
+
+В красной зоне дополнительный сдвиг оттенка ограничен так, чтобы цвет оставался красным и не уходил в оранжевый. После 40 BPM палитра плавно проходит через остальные цвета до фиолетовой зоны.
 
 Дополнительно частоты и громкость влияют на:
 
@@ -518,14 +522,18 @@ The image is based on the song audio.
 BPM = bass hits in 15 seconds * 4
 ```
 
+BPM is clamped to the working range of `30-200`. If a local estimate falls outside that range, the global song BPM estimate is used.
+
 Each pixel gets a random BPM near the local BPM of its time section. The average stays close to the local BPM, but individual pixels vary slightly.
 
 Color mapping:
 
 ```text
-near 30 BPM  -> red
-near 240 BPM -> violet
+30-40 BPM    -> red
+near 200 BPM -> violet
 ```
+
+In the red zone, the extra hue shift is limited so the color stays red instead of drifting into orange. After 40 BPM, the palette moves gradually through the remaining colors toward violet.
 
 Frequencies and loudness affect brightness, saturation, contrast, and pattern visibility.
 
