@@ -379,7 +379,7 @@ The project generates cover art from audio:
 ```text
 1000x1000 PNG
 random audio-based pattern
-BPM-based colors
+BPM-based colors, plus optional local dynamic color mode
 optional centered file name
 optional MP3 cover embedding
 ```
@@ -394,11 +394,13 @@ example/Into Yesterday.mp3
 example/INVISIBLE.mp3
 ```
 
-Each song has two generated versions:
+Each song has original BPM examples and second-mode `drive` examples:
 
 ```text
-covers_no_title   -> artwork only
-covers_with_title -> artwork with the file name in the center
+covers_no_title       -> original BPM mode, artwork only
+covers_with_title     -> original BPM mode with the file name in the center
+covers_drive_no_title   -> second mode, artwork only
+covers_drive_with_title -> second mode with the file name in the center
 ```
 
 | Song | Without Title | With Title |
@@ -406,6 +408,14 @@ covers_with_title -> artwork with the file name in the center
 | Im so sorry | ![Im so sorry no title](example/covers_no_title/Im%20so%20sorry_cover_1000.png) | ![Im so sorry title](example/covers_with_title/Im%20so%20sorry_cover_1000.png) |
 | Into Yesterday | ![Into Yesterday no title](example/covers_no_title/Into%20Yesterday_cover_1000.png) | ![Into Yesterday title](example/covers_with_title/Into%20Yesterday_cover_1000.png) |
 | INVISIBLE | ![INVISIBLE no title](example/covers_no_title/INVISIBLE_cover_1000.png) | ![INVISIBLE title](example/covers_with_title/INVISIBLE_cover_1000.png) |
+
+Second color mode examples generated with `--color-mode drive`:
+
+| Song | Without Title | With Title |
+|---|---|---|
+| Im so sorry | ![Im so sorry drive no title](example/covers_drive_no_title/Im%20so%20sorry_cover_1000.png) | ![Im so sorry drive title](example/covers_drive_with_title/Im%20so%20sorry_cover_1000.png) |
+| Into Yesterday | ![Into Yesterday drive no title](example/covers_drive_no_title/Into%20Yesterday_cover_1000.png) | ![Into Yesterday drive title](example/covers_drive_with_title/Into%20Yesterday_cover_1000.png) |
+| INVISIBLE | ![INVISIBLE drive no title](example/covers_drive_no_title/INVISIBLE_cover_1000.png) | ![INVISIBLE drive title](example/covers_drive_with_title/INVISIBLE_cover_1000.png) |
 
 ## FFmpeg Installation
 
@@ -462,6 +472,20 @@ Generate a cover with centered text:
 python .\music2picture.py covers --source "C:\Music\song.mp3" --output "C:\Music\covers" --center-title
 ```
 
+Generate a cover with the second color-only mode:
+
+```powershell
+python .\music2picture.py covers --source "C:\Music\song.mp3" --output "C:\Music\covers" --color-mode drive
+```
+
+In `drive` mode, only colors change. The original pattern and geometry stay the same. Local color is based on:
+
+```text
+D(t) = 0.4 * O(t) + 0.3 * R(t) + 0.2 * F(t) + 0.1 * C(t)
+```
+
+The final color score also includes a small BPM influence. Slow parts are violet, then blue, green, lime / yellow-green, yellow, orange, and the fastest / most dynamic parts are red.
+
 Generate and embed the cover into the MP3:
 
 ```powershell
@@ -485,6 +509,7 @@ RUN_FROM_CODE = True
 CODE_MODE = "covers"
 CODE_SOURCE = r"C:\Music\song.mp3"
 CODE_OUTPUT = r"C:\Music\covers"
+CODE_COLOR_MODE = "bpm"  # "bpm" or "drive"
 CODE_CENTER_TITLE = True
 CODE_EMBED_COVER = False
 ```
@@ -536,6 +561,60 @@ near 200 BPM -> violet
 In the red zone, the extra hue shift is limited so the color stays red instead of drifting into orange. After 40 BPM, the palette moves gradually through the remaining colors toward violet.
 
 Frequencies and loudness affect brightness, saturation, contrast, and pattern visibility.
+
+## Color Modes
+
+`Music2Picture` has two color modes:
+
+```text
+--color-mode bpm   -> original mode from the GitHub repository
+--color-mode drive -> second mode: only the colors change
+```
+
+### `bpm`: Original Mode
+
+The original mode estimates local BPM from bass peaks in 15-second windows. The pattern, warping, brightness, contrast, and title rendering all follow the original project behavior.
+
+### `drive`: Local Dynamic Color Mode
+
+The second mode keeps the original pattern and geometry exactly the same, but replaces the color source. It estimates how fast and dynamic each short section feels:
+
+```text
+D(t) = 0.4 * O(t) + 0.3 * R(t) + 0.2 * F(t) + 0.1 * C(t)
+```
+
+All four values are normalized from `0` to `1`:
+
+```text
+O(t) -> onset / attack density
+R(t) -> RMS loudness / energy
+F(t) -> spectral flux, how quickly the sound changes
+C(t) -> spectral centroid, brightness / high-frequency energy
+```
+
+The final drive score also includes a small BPM influence:
+
+```text
+final_drive = 0.85 * D(t) + 0.15 * normalized_local_BPM
+```
+
+The simplified high-contrast palette is:
+
+```text
+slow / low drive -> violet -> blue -> green -> lime -> yellow -> orange -> red <- fast / high drive
+```
+
+Use it like this:
+
+```powershell
+python .\music2picture.py covers --source "C:\Music\song.mp3" --output "C:\Music\covers" --color-mode drive
+```
+
+For a folder:
+
+```powershell
+python .\music2picture.py covers --source "C:\Music\Input" --output "C:\Music\covers_drive" --color-mode drive
+```
 
 ## Patterns
 
