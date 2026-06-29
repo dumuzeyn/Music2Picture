@@ -32,6 +32,11 @@ music2picture.py
 
 Одна случайно выбранная песня из коллекции: `Космический цветок.mp3`.
 
+<audio controls>
+  <source src="https://github.com/dumuzeyn/Music2Picture/blob/main/example/modes/%D0%9A%D0%BE%D1%81%D0%BC%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B9%20%D1%86%D0%B2%D0%B5%D1%82%D0%BE%D0%BA.mp3" type="audio/mpeg">
+  Ваш браузер не поддерживает встроенный аудиоплеер.
+</audio>
+
 | Ocean | Plasma |
 |---|---|
 | ![Ocean](example/modes/kosmicheskiy-cvetok_ocean.png) | ![Plasma](example/modes/kosmicheskiy-cvetok_plasma.png) |
@@ -170,6 +175,11 @@ music2picture.py
 ## Example modes
 
 One randomly selected song from the collection: `Cosmic Flower.mp3'.
+
+<audio controls>
+  <source src="https://github.com/dumuzeyn/Music2Picture/blob/main/example/modes/%D0%9A%D0%BE%D1%81%D0%BC%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B9%20%D1%86%D0%B2%D0%B5%D1%82%D0%BE%D0%BA.mp3" type="audio/mpeg">
+  Ваш браузер не поддерживает встроенный аудиоплеер.
+</audio>
 
 | Ocean | Plasma |
 |---|---|
