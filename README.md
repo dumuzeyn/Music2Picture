@@ -32,10 +32,7 @@ music2picture.py
 
 Одна случайно выбранная песня из коллекции: `Космический цветок.mp3`.
 
-<audio controls>
-  <source src="example/modes/Космический цветок.mp3" type="audio/mpeg">
-  Ваш браузер не поддерживает встроенный аудиоплеер.
-</audio>
+<video src="example/modes/Космический цветок.mp3" controls width="300" height="40"></video>
 
 | Ocean | Plasma |
 |---|---|
@@ -176,10 +173,7 @@ music2picture.py
 
 One randomly selected song from the collection: `Cosmic Flower.mp3'.
 
-<audio controls>
-  <source src="example/modes/Космический цветок.mp3" type="audio/mpeg">
-  Ваш браузер не поддерживает встроенный аудиоплеер.
-</audio>
+<video src="example/modes/Космический цветок.mp3" controls width="300" height="40"></video>
 
 | Ocean | Plasma |
 |---|---|
