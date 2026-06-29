@@ -15,14 +15,10 @@ COLOR_MODES = {"ocean", "plasma", "fusion", "aurora"}
 COLOR_MODE_ALIASES = {
     "o": "ocean",
     "ocean": "ocean",
-    "bpm": "ocean",
     "d": "plasma",
-    "p": "plasma",
     "plasma": "plasma",
-    "drive": "plasma",
     "f": "fusion",
     "fusion": "fusion",
-    "character": "fusion",
     "a": "aurora",
     "aurora": "aurora",
 }
@@ -392,7 +388,7 @@ def estimate_bpm_curve_from_bass(bass, output_size, sample_rate=22050, hop=512, 
     return np.clip(curve, 30, 200).astype(np.float32)
 
 
-def estimate_drive_curve(spectrum, rms, centroid, bpm_curve, output_size, sample_rate=22050, hop=512, window_seconds=3):
+def estimate_motion_curve(spectrum, rms, centroid, bpm_curve, output_size, sample_rate=22050, hop=512, window_seconds=3):
     frame_count = rms.size
     if frame_count < 4:
         return np.full(output_size, 0.5, dtype=np.float32)
@@ -413,7 +409,7 @@ def estimate_drive_curve(spectrum, rms, centroid, bpm_curve, output_size, sample
     frames_per_window = max(1, int(window_seconds * sample_rate / hop))
     expected_attacks = max(1.0, window_seconds * 7.0)
     centers = []
-    drive_values = []
+    motion_values = []
 
     for start in range(0, frame_count, frames_per_window):
         end = min(frame_count, start + frames_per_window)
@@ -423,25 +419,25 @@ def estimate_drive_curve(spectrum, rms, centroid, bpm_curve, output_size, sample
         brightness = float(np.mean(centroid_norm[start:end]))
         rms_contrast = float(fixed_scale(np.std(rms_norm[start:end]), 0.025, 0.22))
         local_bpm = float(np.mean(bpm_curve[start * output_size // frame_count : max(start * output_size // frame_count + 1, end * output_size // frame_count)]))
-        bpm_drive = float(fixed_scale(local_bpm, 85.0, 178.0))
-        audio_drive = (
+        bpm_motion = float(fixed_scale(local_bpm, 85.0, 178.0))
+        audio_motion = (
             0.25 * onset_density
             + 0.18 * loudness
             + 0.21 * flux
             + 0.11 * brightness
             + 0.15 * rms_contrast
-            + 0.10 * bpm_drive
+            + 0.10 * bpm_motion
         )
-        drive = float(np.clip(audio_drive, 0, 1))
+        motion = float(np.clip(audio_motion, 0, 1))
         centers.append((start + end - 1) / 2)
-        drive_values.append(drive)
+        motion_values.append(motion)
 
     if len(centers) == 1:
-        return np.full(output_size, drive_values[0], dtype=np.float32)
+        return np.full(output_size, motion_values[0], dtype=np.float32)
 
     source = np.asarray(centers, dtype=np.float32) / max(1, frame_count - 1)
     target = np.linspace(0, 1, output_size, dtype=np.float32)
-    curve = np.interp(target, source, np.asarray(drive_values, dtype=np.float32))
+    curve = np.interp(target, source, np.asarray(motion_values, dtype=np.float32))
     return np.clip(smooth_curve(curve, passes=2, center_weight=4.0), 0, 1).astype(np.float32)
 
 
@@ -545,11 +541,11 @@ def bpm_to_hue(bpm):
     return 0.78 * position
 
 
-def drive_to_hue(drive):
-    drive = np.clip(drive, 0, 1)
+def motion_to_hue(motion):
+    motion = np.clip(motion, 0, 1)
     stops = np.asarray([0.00, 0.15, 0.30, 0.45, 0.58, 0.70, 0.82, 0.92, 1.00], dtype=np.float32)
     hues = np.asarray([0.76, 0.77, 0.79, 0.72, 0.88, 0.91, 0.96, 0.00, 0.04], dtype=np.float32)
-    return np.interp(drive.reshape(-1), stops, hues).reshape(drive.shape).astype(np.float32)
+    return np.interp(motion.reshape(-1), stops, hues).reshape(motion.shape).astype(np.float32)
 
 
 def energy_to_rgb(energy):
@@ -648,7 +644,7 @@ def render_random_cover(
     bpm=120.0,
     bpm_curve=None,
     color_mode="ocean",
-    drive_curve=None,
+    motion_curve=None,
     energy_curve=None,
     global_energy=0.5,
     rng=None,
@@ -659,10 +655,10 @@ def render_random_cover(
     song_map = np.flipud(song_map)
     if bpm_curve is None:
         bpm_curve = np.full(size, bpm, dtype=np.float32)
-    if drive_curve is None:
-        drive_curve = np.full(size, 0.5, dtype=np.float32)
+    if motion_curve is None:
+        motion_curve = np.full(size, 0.5, dtype=np.float32)
     if energy_curve is None:
-        energy_curve = drive_curve
+        energy_curve = motion_curve
 
     volume = resample_axis(rms, size)
     bass_line = resample_axis(bass, size)
@@ -767,13 +763,13 @@ def render_random_cover(
         value = np.clip(0.13 + spectrum_value * 0.54 + volume_map * 0.24 + bass_map * 0.10 + peak_rows * (0.18 + 0.20 * global_energy), 0, 1)
         rgb *= saturation_boost[..., None] * value[..., None] / np.maximum(rgb.max(axis=-1, keepdims=True), 0.08)
         if color_mode == "plasma":
-            drive_wave = np.sin((xx * 0.016 - yy * 0.010 + field_d * 5.0 + field_a * 1.6) * math.pi)
-            drive_lane = np.power(np.clip(drive_wave * 0.5 + 0.5, 0, 1), 3.2)
-            drive_lane *= np.clip(0.42 + sharp_mix * 0.48 + peak_rows * 0.28, 0, 1)
+            plasma_wave = np.sin((xx * 0.016 - yy * 0.010 + field_d * 5.0 + field_a * 1.6) * math.pi)
+            plasma_lane = np.power(np.clip(plasma_wave * 0.5 + 0.5, 0, 1), 3.2)
+            plasma_lane *= np.clip(0.42 + sharp_mix * 0.48 + peak_rows * 0.28, 0, 1)
             cool = np.asarray((0.08, 0.42, 1.00), dtype=np.float32)
             hot = np.asarray((1.00, 0.18, 0.54), dtype=np.float32)
             lane_color = cool * (1.0 - local_energy[..., None]) + hot * local_energy[..., None]
-            rgb = rgb * (1.0 - drive_lane[..., None] * 0.30) + lane_color * (drive_lane[..., None] * 0.30)
+            rgb = rgb * (1.0 - plasma_lane[..., None] * 0.30) + lane_color * (plasma_lane[..., None] * 0.30)
             rgb = np.clip((rgb - 0.5) * 1.10 + 0.5, 0, 1)
         elif color_mode == "aurora":
             aurora_phase = yy * (0.008 + 0.004 * global_energy) - xx * 0.004 + field_a * 4.4 + field_c * 2.1
@@ -1044,7 +1040,7 @@ def make_cover(audio_path, output_path, size=1000, patterns=2, center_title=True
     bpm = estimate_bpm(rms)
     bpm_curve = estimate_bpm_curve_from_bass(bass, size)
     energy_curve, global_energy, diagnostics = estimate_energy_profile(spectrum, rms, bass, highs, centroid, bpm, bpm_curve, size)
-    drive_curve = energy_curve if color_mode in {"plasma", "fusion", "aurora"} else estimate_drive_curve(spectrum, rms, centroid, bpm_curve, size)
+    motion_curve = energy_curve if color_mode in {"plasma", "fusion", "aurora"} else estimate_motion_curve(spectrum, rms, centroid, bpm_curve, size)
     rgb = render_random_cover(
         spectrum,
         rms,
@@ -1056,7 +1052,7 @@ def make_cover(audio_path, output_path, size=1000, patterns=2, center_title=True
         bpm=bpm,
         bpm_curve=bpm_curve,
         color_mode=color_mode,
-        drive_curve=drive_curve,
+        motion_curve=motion_curve,
         energy_curve=energy_curve,
         global_energy=global_energy,
         rng=rng,
@@ -1167,7 +1163,7 @@ def main():
         "--color-mode",
         choices=sorted(COLOR_MODE_ALIASES),
         default="plasma",
-        help="Cover mode: Ocean/O, Plasma/D, Fusion/F, Aurora/A. Old aliases bpm/drive/character are also accepted.",
+        help="Cover mode: Ocean/O, Plasma/D, Fusion/F, Aurora/A.",
     )
     covers.add_argument("--seed", type=int, default=None, help="Integer seed for repeatable cover generation.")
     covers.add_argument("--center-title", dest="center_title", action="store_true", default=True, help="Draw the file name in the center (default).")
