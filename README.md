@@ -1,5 +1,7 @@
 # Music2Picture
 
+[English Version](#engG1)
+
 Music2Picture создает квадратные PNG-обложки из аудиофайлов. Картинка строится по спектру, громкости, басу, верхам, локальной энергии и BPM песни. Название трека рисуется по центру по умолчанию.
 
 Основной файл:
@@ -23,10 +25,8 @@ music2picture.py
 |---|---:|---|
 | `Ocean` | `O` | Цвет строится от BPM и музыкального движения. Это бывший `bpm`. |
 | `Plasma` | `D` | Энергичный режим с диагональным движением и контрастными акцентами. Это бывший `drive`. |
-| `Fusion` | `F` | Органический режим по характеру песни: энергия, бас, середина, верха. Это бывший `character`. |
+| `Fusion` | `F` | Органический режим по характеру песни: энергия, бас, середина, верха. |
 | `Aurora` | `A` | Основан на `Fusion`, но добавляет мягкие северные переливы и световые ленты. |
-
-Старые имена `bpm`, `drive`, `character` все еще принимаются как совместимые алиасы.
 
 ## Пример режимов
 
@@ -133,3 +133,143 @@ covers   - генерация PNG-обложек
 --no-center-title отключает текст
 --embed-cover     встроить PNG в MP3
 ```
+
+> **Автор проекта: Зейналов У.Р.о.**
+--- 
+<h1 id = engG1>
+Music2Picture
+</h1>
+
+Music2Picture creates square PNG covers from audio files. The picture is based on the spectrum, volume, bass, tops, local energy and BPM of the song. The track name is drawn in the center by default.
+
+The main file:
+
+```text
+music2picture.py
+```
+
+## Features
+
+- Generate `1000x1000` covers for a single track or music folder.
+- Four color and character modes: `Ocean', `Plasma', `Fusion', `Aurora'.
+- Short aliases of modes: `O`, `D`, `F`, `A`.
+- Repeatable result via `--seed'.
+- The text in the center is enabled by default.
+- Optional embedding of PNG as an MP3 cover via FFmpeg.
+
+## Modes
+
+| Mode | Alias | What does |
+|---|---:|---|
+| `Ocean` | `O` | The color is based on BPM and musical movement. This is the former `bpm`. |
+| `Plasma` | `D` | Energetic mode with diagonal movement and contrasting accents. This is the former `drive`. |
+| `Fusion` | `F` | Organic mode by the nature of the song: energy, bass, middle, top. |
+| `Aurora` | `A` | It is based on `Fusion`, but adds soft northern iridescences and light ribbons. |
+
+
+## Example modes
+
+One randomly selected song from the collection: `Cosmic Flower.mp3'.
+
+| Ocean | Plasma |
+|---|---|
+| ![Ocean](example/modes/kosmicheskiy-cvetok_ocean.png) | ![Plasma](example/modes/kosmicheskiy-cvetok_plasma.png) |
+
+| Fusion | Aurora |
+|---|---|
+| ![Fusion](example/modes/kosmicheskiy-cvetok_fusion.png) | ![Aurora](example/modes/kosmicheskiy-cvetok_aurora.png) |
+
+## Installation
+
+Python dependencies are needed:
+
+```powershell
+pip install numpy pillow
+```
+
+FFmpeg and FFprobe are also needed in the `PATH`:
+
+```powershell
+ffmpeg -version
+ffprobe -version
+```
+
+## Generation
+
+Generate a cover for a single file:
+
+```powershell
+python .\music2picture.py covers --source "C:\Music\song.mp3" --output "C:\Music\covers" --color-mode aurora --seed 42
+```
+
+Generate covers for the entire folder:
+
+```powershell
+python .\music2picture.py covers --source "C:\Music\Input" --output "C:\Music\covers" --color-mode plasma --seed 42
+```
+
+Use a short mode alias:
+
+```powershell
+python .\music2picture.py covers --source "C:\Music\song.mp3" --output "C:\Music\covers" --color-mode A
+```
+
+Generate without text:
+
+```powershell
+python .\music2picture.py covers --source "C:\Music\song.mp3" --output "C:\Music\covers" --no-center-title
+```
+
+Embed an image as an MP3 cover:
+
+```powershell
+python .\music2picture.py covers --source "C:\Music\song.mp3" --output "C:\Music\covers" --embed-cover
+```
+
+## Text
+
+The text is enabled by default. The file name is used without an extension.
+
+Features of the text:
+
+- automatic word wrapping on several lines;
+- centering the entire caption block in the center of the image;
+- a single shadow in one direction;
+- most of the letters remain white;
+- rare torn fragments of the background color may appear inside the letters.
+
+## Settings from the code
+
+You can enable startup directly from the file.:
+
+```python
+RUN_FROM_CODE = True
+CODE_MODE = "covers"
+CODE_SOURCE = r"C:\Music\song.mp3"
+CODE_OUTPUT = r"C:\Music\covers"
+CODE_COLOR_MODE = "aurora"
+CODE_CENTER_TITLE = True
+CODE_SEED = 42
+```
+
+## CLI Commands
+
+```text
+process - normalization of music via FFmpeg
+covers - generation of PNG covers
+```
+
+The main parameters of `covers`:
+
+```text
+--source a file or folder with music
+--output folder for PNG
+--size the size of the image, by default 1000
+--patterns 1 or 2, richness of the pattern
+--color-mode ocean/plasma/fusion/aurora or O/D/F/A
+--seed captures randomness
+--center-title text centered, enabled by default
+--no-center-title disables text
+--embed-cover to embed PNG in MP3
+```
+>**Author of project: Zeynalov U.R.o.**
