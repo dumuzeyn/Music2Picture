@@ -1,276 +1,106 @@
-# Music2Picture
+# Music2Picture v2
 
-[English Version](#engG1)
+[English](#english)
 
-Music2Picture создает квадратные PNG-обложки из аудиофайлов. Картинка строится по спектру, громкости, басу, верхам, локальной энергии и BPM песни. Название трека рисуется по центру по умолчанию.
+Music2Picture v2 анализирует музыкальный файл и создаёт квадратную обложку через единый адаптивный параметрический движок. Отдельные режимы Aurora, Plasma, Ocean и Fusion удалены: геометрия, палитра, фактура, плотность, фокус и движение теперь непрерывно вычисляются для конкретной песни.
 
-Основной файл:
+## Пайплайн
 
 ```text
-music2picture.py
+Audio
+-> Audio Analysis
+-> VisualDNA
+-> Song Description
+-> Visual Brief + VisualPlan
+-> Music2Picture v2 Cover
 ```
 
-## Возможности
+Анализ сохраняет раздельно:
 
-- Генерация обложек `1000x1000` для одного трека или папки с музыкой.
-- Четыре режима цвета и характера: `Ocean`, `Plasma`, `Fusion`, `Aurora`.
-- Короткие алиасы режимов: `O`, `D`, `F`, `A`.
-- Повторяемый результат через `--seed`.
-- Текст по центру включен по умолчанию.
-- Опциональное встраивание PNG как обложки MP3 через FFmpeg.
+- абсолютную громкость, пик и crest factor;
+- относительную и структурную динамику;
+- темп, уверенность, атаки, плотность и регулярность ритма;
+- спектральный центр, rolloff, contrast, flatness, flux и zero crossing rate;
+- басовую массу, гармоничность, тональность, лад и смены гармонии;
+- части песни, контраст секций, положение перехода и кульминации.
 
-## Режимы
+Название и внешние метаданные могут уточнять описание, но звук остаётся основной частью `VisualDNA`. Палитра не определяется одним BPM или одним жанром.
 
-| Режим | Алиас | Что делает |
-|---|---:|---|
-| `Ocean` | `O` | Цвет строится от BPM и музыкального движения. Это бывший `bpm`. |
-| `Plasma` | `D` | Энергичный режим с диагональным движением и контрастными акцентами. Это бывший `drive`. |
-| `Fusion` | `F` | Органический режим по характеру песни: энергия, бас, середина, верха. |
-| `Aurora` | `A` | Основан на `Fusion`, но добавляет мягкие северные переливы и световые ленты. |
+## Одна песня
 
-## Пример режимов
+```powershell
+python .\music2picture.py covers --source "C:\Music\song.mp3" --output "C:\Music\covers" --seed 42
+```
 
-Одна случайно выбранная песня из коллекции: [`Космический цветок.mp3`](https://github.com/dumuzeyn/Music2Picture/blob/main/example/modes/%D0%9A%D0%BE%D1%81%D0%BC%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B9%20%D1%86%D0%B2%D0%B5%D1%82%D0%BE%D0%BA.mp3)
+Текст на изображении по умолчанию выключен. Добавить имя файла после рендеринга:
 
-| Ocean | Plasma |
-|---|---|
-| ![Ocean](example/modes/kosmicheskiy-cvetok_ocean.png) | ![Plasma](example/modes/kosmicheskiy-cvetok_plasma.png) |
+```powershell
+python .\music2picture.py covers --source "C:\Music\song.mp3" --output "C:\Music\covers" --center-title
+```
 
-| Fusion | Aurora |
-|---|---|
-| ![Fusion](example/modes/kosmicheskiy-cvetok_fusion.png) | ![Aurora](example/modes/kosmicheskiy-cvetok_aurora.png) |
+## Папка и отдельные описания
+
+```powershell
+python .\music2picture.py covers --source "C:\Music\Input" --output "C:\Music\covers"
+python .\music2picture.py describe --source "C:\Music\Input" --output "C:\Music\descriptions"
+```
+
+Для каждого файла создаются собственные `song_description` и `visual_brief`. Результат привязывается к нормализованному пути, размеру, времени изменения и аудио-отпечатку. Неизменённые файлы восстанавливаются из `%LOCALAPPDATA%\SonicForge\analysis\track_descriptions.json`. Ошибка одного трека не останавливает папку; `--regenerate` принудительно обновляет тексты.
+
+## Python API
+
+```python
+from music2picture import make_cover, make_covers, describe
+
+make_cover("song.mp3", "cover.png", size=1000, seed=42)
+make_covers("music", "covers", size=1000)
+describe("music", output="descriptions")
+```
+
+Старые именованные аргументы принимаются для совместимости, но больше не выбирают шаблон или цветовой режим.
 
 ## Установка
 
-Нужны Python-зависимости:
-
 ```powershell
-pip install numpy pillow
+pip install -r requirements.txt
 ```
 
-Также нужен FFmpeg и FFprobe в `PATH`:
+FFmpeg и FFprobe должны быть доступны в `PATH`.
 
-```powershell
-ffmpeg -version
-ffprobe -version
-```
+## Основа решений
 
-## Генерация
+- [Essentia descriptors](https://essentia.upf.edu/documentation.html)
+- [DEAM valence/arousal dataset](https://cvml.unige.ch/databases/DEAM/)
+- [Music-color associations are mediated by emotion](https://doi.org/10.1073/pnas.1212562110)
+- [MuLan audio-language representation](https://arxiv.org/abs/2208.12415)
+- [CLAP audio-language representation](https://arxiv.org/abs/2206.04769)
+- [Audio-guided Album Cover Art Generation](https://arxiv.org/abs/2207.07162)
 
-Сгенерировать обложку для одного файла:
+Текущая версия использует компактный анализ NumPy/SciPy. MuLan и CLAP приведены как направление для будущего обучаемого audio-text слоя, а не как уже встроенные модели.
 
-```powershell
-python .\music2picture.py covers --source "C:\Music\song.mp3" --output "C:\Music\covers" --color-mode aurora --seed 42
-```
+> Автор проекта: Зейналов У.Р.о.
 
-Сгенерировать обложки для всей папки:
+---
 
-```powershell
-python .\music2picture.py covers --source "C:\Music\Input" --output "C:\Music\covers" --color-mode plasma --seed 42
-```
+## English
 
-Использовать короткий алиас режима:
+Music2Picture v2 analyzes music and creates square cover art through one universal adaptive parametric renderer. The former Aurora, Plasma, Ocean, and Fusion modes have been removed. Geometry, palette, texture, density, focal balance, and motion are continuously derived from each track's `VisualDNA` and `VisualPlan`.
 
-```powershell
-python .\music2picture.py covers --source "C:\Music\song.mp3" --output "C:\Music\covers" --color-mode A
-```
-
-Сгенерировать без текста:
-
-```powershell
-python .\music2picture.py covers --source "C:\Music\song.mp3" --output "C:\Music\covers" --no-center-title
-```
-
-Встроить картинку как обложку MP3:
-
-```powershell
-python .\music2picture.py covers --source "C:\Music\song.mp3" --output "C:\Music\covers" --embed-cover
-```
-
-## Текст
-
-Текст включен по умолчанию. Используется имя файла без расширения.
-
-Особенности текста:
-
-- автоматический перенос слов на несколько строк;
-- центрирование всего блока надписи по центру картинки;
-- единая тень в одном направлении;
-- большая часть букв остается белой;
-- внутри букв могут появляться редкие рваные фрагменты цвета фона.
-
-## Настройки из кода
-
-Можно включить запуск прямо из файла:
-
-```python
-RUN_FROM_CODE = True
-CODE_MODE = "covers"
-CODE_SOURCE = r"C:\Music\song.mp3"
-CODE_OUTPUT = r"C:\Music\covers"
-CODE_COLOR_MODE = "aurora"
-CODE_CENTER_TITLE = True
-CODE_SEED = 42
-```
-
-## Команды CLI
+The text-first pipeline is:
 
 ```text
-process  - нормализация музыки через FFmpeg
-covers   - генерация PNG-обложек
+Audio -> Audio Analysis -> VisualDNA -> Song Description
+-> Visual Brief + VisualPlan -> Music2Picture v2 Cover
 ```
 
-Основные параметры `covers`:
+Absolute loudness is kept separate from local dynamics and global structure. Rhythm, attacks, spectral descriptors, bass mass, harmony, key, section contrast, and climax position all contribute to the result. There is no direct BPM-to-color rule.
 
-```text
---source          файл или папка с музыкой
---output          папка для PNG
---size            размер изображения, по умолчанию 1000
---patterns        1 или 2, богатство узора
---color-mode      ocean/plasma/fusion/aurora или O/D/F/A
---seed            фиксирует случайность
---center-title    текст по центру, включен по умолчанию
---no-center-title отключает текст
---embed-cover     встроить PNG в MP3
-```
-
-> **Автор проекта: Зейналов У.Р.о.**
---- 
-<h1 id = engG1>
-Music2Picture
-</h1>
-
-Music2Picture creates square PNG covers from audio files. The picture is based on the spectrum, volume, bass, tops, local energy and BPM of the song. The track name is drawn in the center by default.
-
-The main file:
-
-```text
-music2picture.py
-```
-
-## Features
-
-- Generate `1000x1000` covers for a single track or music folder.
-- Four color and character modes: `Ocean', `Plasma', `Fusion', `Aurora'.
-- Short aliases of modes: `O`, `D`, `F`, `A`.
-- Repeatable result via `--seed'.
-- The text in the center is enabled by default.
-- Optional embedding of PNG as an MP3 cover via FFmpeg.
-
-## Modes
-
-| Mode | Alias | What does |
-|---|---:|---|
-| `Ocean` | `O` | The color is based on BPM and musical movement. This is the former `bpm`. |
-| `Plasma` | `D` | Energetic mode with diagonal movement and contrasting accents. This is the former `drive`. |
-| `Fusion` | `F` | Organic mode by the nature of the song: energy, bass, middle, top. |
-| `Aurora` | `A` | It is based on `Fusion`, but adds soft northern iridescences and light ribbons. |
-
-
-## Example modes
-
-One randomly selected song from the collection: [`Cosmic Flower.mp3`](https://github.com/dumuzeyn/Music2Picture/blob/main/example/modes/%D0%9A%D0%BE%D1%81%D0%BC%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B9%20%D1%86%D0%B2%D0%B5%D1%82%D0%BE%D0%BA.mp3)
-
-
-| Ocean | Plasma |
-|---|---|
-| ![Ocean](example/modes/kosmicheskiy-cvetok_ocean.png) | ![Plasma](example/modes/kosmicheskiy-cvetok_plasma.png) |
-
-| Fusion | Aurora |
-|---|---|
-| ![Fusion](example/modes/kosmicheskiy-cvetok_fusion.png) | ![Aurora](example/modes/kosmicheskiy-cvetok_aurora.png) |
-
-## Installation
-
-Python dependencies are needed:
+Batch description generation creates an independent `song_description` and `visual_brief` for every track. Persistent records use canonical path, file size, modification time, and an audio fingerprint. A damaged file is reported without stopping the remaining batch.
 
 ```powershell
-pip install numpy pillow
+pip install -r requirements.txt
+python .\music2picture.py covers --source "C:\Music\song.mp3" --output "C:\Music\covers"
+python .\music2picture.py describe --source "C:\Music\Input" --output "C:\Music\descriptions"
 ```
 
-FFmpeg and FFprobe are also needed in the `PATH`:
-
-```powershell
-ffmpeg -version
-ffprobe -version
-```
-
-## Generation
-
-Generate a cover for a single file:
-
-```powershell
-python .\music2picture.py covers --source "C:\Music\song.mp3" --output "C:\Music\covers" --color-mode aurora --seed 42
-```
-
-Generate covers for the entire folder:
-
-```powershell
-python .\music2picture.py covers --source "C:\Music\Input" --output "C:\Music\covers" --color-mode plasma --seed 42
-```
-
-Use a short mode alias:
-
-```powershell
-python .\music2picture.py covers --source "C:\Music\song.mp3" --output "C:\Music\covers" --color-mode A
-```
-
-Generate without text:
-
-```powershell
-python .\music2picture.py covers --source "C:\Music\song.mp3" --output "C:\Music\covers" --no-center-title
-```
-
-Embed an image as an MP3 cover:
-
-```powershell
-python .\music2picture.py covers --source "C:\Music\song.mp3" --output "C:\Music\covers" --embed-cover
-```
-
-## Text
-
-The text is enabled by default. The file name is used without an extension.
-
-Features of the text:
-
-- automatic word wrapping on several lines;
-- centering the entire caption block in the center of the image;
-- a single shadow in one direction;
-- most of the letters remain white;
-- rare torn fragments of the background color may appear inside the letters.
-
-## Settings from the code
-
-You can enable startup directly from the file.:
-
-```python
-RUN_FROM_CODE = True
-CODE_MODE = "covers"
-CODE_SOURCE = r"C:\Music\song.mp3"
-CODE_OUTPUT = r"C:\Music\covers"
-CODE_COLOR_MODE = "aurora"
-CODE_CENTER_TITLE = True
-CODE_SEED = 42
-```
-
-## CLI Commands
-
-```text
-process - normalization of music via FFmpeg
-covers - generation of PNG covers
-```
-
-The main parameters of `covers`:
-
-```text
---source a file or folder with music
---output folder for PNG
---size the size of the image, by default 1000
---patterns 1 or 2, richness of the pattern
---color-mode ocean/plasma/fusion/aurora or O/D/F/A
---seed captures randomness
---center-title text centered, enabled by default
---no-center-title disables text
---embed-cover to embed PNG in MP3
-```
->**Author of project: Zeynalov U.R.o.**
+FFmpeg and FFprobe must be available in `PATH`. Rendering is deterministic when `--seed` is supplied, and cover text is disabled by default.
