@@ -76,7 +76,7 @@ FFmpeg и FFprobe должны быть доступны в `PATH`.
 - [CLAP audio-language representation](https://arxiv.org/abs/2206.04769)
 - [Audio-guided Album Cover Art Generation](https://arxiv.org/abs/2207.07162)
 
-Текущая версия использует компактный анализ NumPy/SciPy. MuLan и CLAP приведены как направление для будущего обучаемого audio-text слоя, а не как уже встроенные модели.
+Текущая версия использует компактный анализ NumPy. MuLan и CLAP приведены как направление для будущего обучаемого audio-text слоя, а не как уже встроенные модели.
 
 > Автор проекта: Зейналов У.Р.о.
 
