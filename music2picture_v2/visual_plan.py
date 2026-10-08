@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import hashlib
+
 from .models import VisualDNA, VisualPlan
 from .utils import clamp, hsv_hex
+from .character import musical_character
 
 
 KEY_HUES = {
@@ -22,9 +25,11 @@ KEY_HUES = {
 
 def build_visual_plan(dna: VisualDNA, variation: int = 0) -> VisualPlan:
     anchor = KEY_HUES.get(dna.key, 210.0)
+    fingerprint_digest = hashlib.sha256(dna.fingerprint.encode("utf-8", errors="replace")).digest()
+    fingerprint_shift = (int.from_bytes(fingerprint_digest[:2], "little") % 17) - 8
     emotional_shift = (dna.warmth - 0.5) * 48.0 + (dna.valence - 0.5) * 34.0
-    variation_shift = ((variation * 47) % 71) - 35 if variation else 0
-    primary_hue = (anchor + emotional_shift + variation_shift) % 360.0
+    variation_shift = ((variation * 11) % 15) - 7 if variation else 0
+    primary_hue = (anchor + emotional_shift + variation_shift + fingerprint_shift) % 360.0
     palette_width = clamp(0.20 + dna.harmonic_complexity * 0.42 + dna.dissonance * 0.38)
     separation = 28.0 + palette_width * 112.0
     secondary_hue = (primary_hue + separation * (1.0 if variation % 2 == 0 else -1.0)) % 360.0
@@ -57,14 +62,8 @@ def build_visual_plan(dna: VisualDNA, variation: int = 0) -> VisualPlan:
         f"density {density:.2f}, flow {flow:.2f}, fragmentation {fragmentation:.2f}"
     )
 
-    dark_value = clamp(luminance * (0.38 + (1.0 - contrast) * 0.18), 0.10, 0.48)
-    base_value = clamp(luminance * (0.82 + (1.0 - contrast) * 0.12), 0.25, 0.82)
-    light_value = clamp(luminance + 0.24 + contrast * 0.12, 0.52, 0.98)
-    palette = (
-        hsv_hex(primary_hue, saturation * 0.66, dark_value),
-        hsv_hex(primary_hue, saturation, base_value),
-        hsv_hex(secondary_hue, clamp(saturation * 0.88), light_value),
-        hsv_hex(accent_hue, clamp(saturation + 0.16), clamp(light_value + 0.08)),
+    palette_scheme, palette = _build_palette(
+        dna, primary_hue, saturation, luminance, contrast, variation
     )
     lighting = _lighting(dna, contrast)
     return VisualPlan(
@@ -94,6 +93,7 @@ def build_visual_plan(dna: VisualDNA, variation: int = 0) -> VisualPlan:
         visual_weight=visual_weight,
         spatial_balance=spatial_balance,
         directionality=directionality,
+        palette_scheme=palette_scheme,
         palette=palette,
         lighting=lighting,
     )
@@ -128,3 +128,28 @@ def _lighting(dna: VisualDNA, contrast: float) -> str:
     if dna.section_contrast > 0.60:
         return "alternating pools of light that mirror section-to-section contrast"
     return "balanced directional light with a clear focal gradient"
+
+
+def _build_palette(dna, primary_hue, saturation, luminance, contrast, variation):
+    """Ordered calm-to-drive swatches; musical character chooses their usage."""
+    drive = musical_character(dna).drive
+    if dna.spectral_flatness > .64 or dna.aggressiveness > .68:
+        scheme = 'high_contrast'
+    elif drive < .22:
+        scheme = 'muted'
+    elif drive < .4:
+        scheme = 'analogous'
+    elif drive < .6:
+        scheme = 'split_complementary'
+    else:
+        scheme = 'saturated'
+    # Neighboring hues form one material. Large hue jumps produced muddy
+    # brown/neon-green combinations even in a narrow character-selected range.
+    accent_offset = 12 + dna.tension * 24 + dna.dissonance * 10
+    offsets = (-14, -6, 0, accent_offset * .4, accent_offset)
+    colors = tuple(hsv_hex(
+        (primary_hue + offset) % 360,
+        clamp(.28 + index * .10 + saturation * .18, .24, .84),
+        clamp(.22 + index * .14 + luminance * .10 + contrast * .03, .20, .88),
+    ) for index, offset in enumerate(offsets))
+    return scheme, colors

@@ -28,11 +28,12 @@ STAGE_ORDER = (
 
 
 class Music2PicturePipeline:
-    """Text-first Music2Picture v2 pipeline with a bounded in-memory cache."""
+    """M2Pv2 analysis and explanation pipeline with bounded in-memory caches."""
 
     def __init__(self, cache_size: int = 12):
         self.cache_size = max(1, int(cache_size))
         self._cache: OrderedDict[str, AnalysisBundle] = OrderedDict()
+        self._analysis_cache: OrderedDict[str, object] = OrderedDict()
 
     def analyse(
         self,
@@ -53,7 +54,7 @@ class Music2PicturePipeline:
                 "lyrics_hash": hashlib.sha256(lyrics.encode("utf-8", errors="replace")).hexdigest(),
                 "mood": mood_override,
                 "variation": int(variation),
-                "version": 2,
+                "version": 5,
             },
             ensure_ascii=False,
             sort_keys=True,
@@ -66,14 +67,23 @@ class Music2PicturePipeline:
             return cached
 
         self._progress(progress, "loading_audio")
-        analysis = analyze_audio_file(path)
+        analysis_key = file_cache_key(path, 'audio-analysis-v5')
+        analysis = None if force else self._analysis_cache.get(analysis_key)
+        if analysis is None:
+            analysis = analyze_audio_file(path)
+            self._analysis_cache[analysis_key] = analysis
+        self._analysis_cache.move_to_end(analysis_key)
+        while len(self._analysis_cache) > self.cache_size:
+            self._analysis_cache.popitem(last=False)
         for stage in STAGE_ORDER[1:5]:
             self._progress(progress, stage)
         self._progress(progress, "building_visual_dna")
         visual_dna = build_visual_dna(analysis, metadata_text, lyrics, mood_override)
         language = detect_language(f"{metadata_text} {lyrics[:2000]}")
         self._progress(progress, "creating_song_description")
-        song_description = create_song_description(visual_dna, "ru" if language in {"ru", "mixed"} else "en")
+        song_description = create_song_description(
+            visual_dna, "ru" if language in {"ru", "mixed"} else "en", lyrics=lyrics
+        )
         self._progress(progress, "creating_visual_plan")
         visual_plan = build_visual_plan(visual_dna, variation=variation)
         self._progress(progress, "creating_visual_brief")

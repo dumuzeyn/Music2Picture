@@ -9,11 +9,11 @@ from typing import Any
 from .models import AnalysisBundle
 
 
-STORE_VERSION = 1
+STORE_VERSION = 2
 
 
 def default_store_path() -> Path:
-    root = Path(os.environ.get("LOCALAPPDATA", Path.home())) / "SonicForge" / "analysis"
+    root = Path(os.environ.get("LOCALAPPDATA", Path.home())) / "Music2Picture" / "analysis"
     return root / "track_descriptions.json"
 
 
@@ -35,7 +35,8 @@ class DescriptionStore:
             record = self._read().get("tracks", {}).get(key)
         if not record:
             return None
-        if record.get("size") != stat.st_size or record.get("mtime_ns") != stat.st_mtime_ns:
+        if (record.get("size") != stat.st_size or record.get("mtime_ns") != stat.st_mtime_ns
+                or record.get('pipeline_version') != 5):
             return None
         return dict(record)
 
@@ -43,6 +44,7 @@ class DescriptionStore:
         path = Path(audio_path).resolve()
         stat = path.stat()
         record = {
+            'pipeline_version': 5,
             "path": str(path),
             "size": stat.st_size,
             "mtime_ns": stat.st_mtime_ns,

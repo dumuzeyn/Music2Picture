@@ -50,6 +50,7 @@ class AudioAnalysis:
     climax_position: float
     intro_energy: float
     ending_energy: float
+    activity_curve: tuple[float, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -102,6 +103,7 @@ class VisualDNA:
     intro_energy: float
     ending_energy: float
     fingerprint: str
+    activity_curve: tuple[float, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -137,7 +139,8 @@ class VisualPlan:
     visual_weight: float
     spatial_balance: float
     directionality: float
-    palette: tuple[str, str, str, str]
+    palette_scheme: str
+    palette: tuple[str, ...]
     lighting: str
 
     def to_dict(self) -> dict[str, Any]:
@@ -146,7 +149,7 @@ class VisualPlan:
 
 @dataclass(frozen=True)
 class AnalysisBundle:
-    """One cached analysis shared by descriptions, prompts and renderers."""
+    """One cached analysis shared by descriptions, visual plans and renderers."""
 
     analysis: AudioAnalysis
     visual_dna: VisualDNA

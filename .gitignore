@@ -4,3 +4,8 @@ __pycache__/
 venv/
 .env
 .sonicforge/
+.m2p/
+build/
+dist/
+*.spec
+*.log

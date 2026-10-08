@@ -42,7 +42,8 @@ class StubPipeline:
 
 class Music2PictureV2Tests(unittest.TestCase):
     def test_renderer_has_one_public_mode_free_signature(self):
-        self.assertEqual(tuple(inspect.signature(render_cover).parameters), ("visual_dna", "visual_plan", "size", "seed"))
+        self.assertEqual(tuple(inspect.signature(render_cover).parameters),
+                         ('visual_dna', 'visual_plan', 'size', 'seed', 'preview', 'detail', 'palette', 'palette_stops', 'composition'))
         self.assertFalse(hasattr(music2picture_v2, "MODES"))
         self.assertFalse(hasattr(music2picture_v2, "select_mode"))
 
