@@ -11,6 +11,7 @@ class DocumentationTests(unittest.TestCase):
         self.assertEqual(text.count('```mermaid'), 4)
         self.assertIn('M2Pv1', text)
         self.assertIn('M2Pv2', text)
+        self.assertIn('M2Pv3', text)
         russian, english = text.split('\n## English\n',1)
         self.assertTrue(russian.rstrip().endswith('---'))
         self.assertIn('Автор проекта:', russian.split('## Ограничения')[-1])

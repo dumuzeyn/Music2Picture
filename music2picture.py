@@ -42,7 +42,7 @@ def make_cover(
     composition='auto',
     **_deprecated,
 ):
-    """Create M2Pv1 or M2Pv2 artwork; the source is unchanged by this function."""
+    """Create M2Pv1, M2Pv2 or M2Pv3 artwork without changing the source."""
     options = RenderOptions(engine=engine, size=size, seed=0 if seed is None else seed,
                             detail=detail, color_mode=color_mode, patterns=patterns,
                             color_scheme=color_scheme, colors=tuple(colors), contrast=contrast,
@@ -204,6 +204,10 @@ def _save_profile(output_path, audio_path, bundle, seed, center_title, options=N
         "analysis_bundle": bundle.to_dict() if bundle else None,
         'settings': options.to_dict() if options else {},
     }
+    if options and options.engine == 'M2Pv3':
+        from music2picture_v3 import GENERATOR_VERSION
+        data['generator_version'] = GENERATOR_VERSION
+        data['timeline_direction'] = 'left_to_right'
     target.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
@@ -212,7 +216,7 @@ def main():
         from m2p_gui import main as gui_main
         gui_main()
         return
-    parser = argparse.ArgumentParser(description="M2Pv1 + M2Pv2: music-to-picture generators")
+    parser = argparse.ArgumentParser(description="M2Pv1 + M2Pv2 + M2Pv3: music-to-picture generators")
     parser.add_argument('--version', action='version', version=f'Music2Picture {VERSION}')
     commands = parser.add_subparsers(dest="command", required=True)
     covers = commands.add_parser("covers")

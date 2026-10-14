@@ -1,16 +1,16 @@
 param(
     [Parameter(Mandatory=$true)][string]$Commit,
-    [string]$Tag='v2.1.0',
+    [string]$Tag='v2.2.0',
     [long]$ResumeDraftId=0
 )
 $ErrorActionPreference='Stop'
 $ReleaseRoot=Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $ReleaseRoot
-if ($Commit -notmatch '^[a-f0-9]{40}$' -or $Tag -ne 'v2.1.0') { throw 'Unexpected release identity' }
+if ($Commit -notmatch '^[a-f0-9]{40}$' -or $Tag -ne 'v2.2.0') { throw 'Unexpected release identity' }
 if ((git rev-parse HEAD) -ne $Commit) { throw 'Release commit is not local HEAD' }
 $ReleaseRemote=git ls-remote origin refs/heads/main
 if ($LASTEXITCODE -ne 0 -or $ReleaseRemote -notmatch "^$Commit\s") { throw 'Commit is not pushed to main' }
-$ReleaseAssets=@('dist/M2P-Studio.exe','dist/Music2Picture-2.1.0-source.zip','dist/SHA256SUMS.txt')
+$ReleaseAssets=@('dist/M2P-Studio.exe','dist/Music2Picture-2.2.0-source.zip','dist/SHA256SUMS.txt')
 foreach ($Asset in $ReleaseAssets) { if (-not (Test-Path -LiteralPath $Asset -PathType Leaf)) { throw "Missing asset: $Asset" } }
 $CredentialLines="protocol=https`nhost=github.com`n`n" | git credential fill
 $Credentials=@{}
@@ -27,8 +27,8 @@ try {
     if ($Matching -and (-not $ResumeDraftId -or $Matching.id -ne $ResumeDraftId -or -not $Matching.draft)) {
         throw 'Release already exists; it will not be overwritten'
     }
-    $Body=Get-Content -LiteralPath 'docs/RELEASE-2.1.0.md' -Raw -Encoding UTF8
-    $Payload=@{tag_name=$Tag; target_commitish=$Commit; name='Music2Picture 2.1.0 — M2Pv1 + M2Pv2 Studio';
+    $Body=Get-Content -LiteralPath 'docs/RELEASE-2.2.0.md' -Raw -Encoding UTF8
+    $Payload=@{tag_name=$Tag; target_commitish=$Commit; name='Music2Picture 2.2.0 — M2Pv1 + M2Pv2 + M2Pv3 Studio';
                body=$Body; draft=$true; prerelease=$false} | ConvertTo-Json
     if ($ResumeDraftId) {
         if (-not $Matching) { throw 'Draft to resume was not verified' }

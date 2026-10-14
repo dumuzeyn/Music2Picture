@@ -1,4 +1,4 @@
-"""Verify both engines, actual editable controls and notices inside the EXE."""
+"""Verify all engines, actual editable controls and notices inside the EXE."""
 import argparse
 import types
 
@@ -26,13 +26,16 @@ def main():
     archive=CArchiveReader(args.exe)
     embedded=archive.open_embedded_archive('PYZ.pyz')
     assert {'music2picture_v1.core','music2picture_v1.renderer','music2picture_v2.renderer',
+            'music2picture_v3.renderer','music2picture_v3.audio_analysis',
             'm2p_controls','m2p_selftest','m2p_id3'} <= set(embedded.toc)
     controls=set(strings(embedded.extract('m2p_controls')))
-    assert {'M2Pv1','M2Pv2','sunset','ocean','neon','forest','mono','custom','2.1.0'} <= controls
+    assert {'M2Pv1','M2Pv2','M2Pv3','sunset','ocean','neon','forest','mono','custom','2.2.0'} <= controls
     classic=set(strings(embedded.extract('music2picture_v1.core')))
     assert 'remove_classic_pixel_grain' in classic
     modern=set(strings(embedded.extract('music2picture_v2.renderer')))
     assert {'contour-character-v5','composition','palette_positions'} <= modern
+    timeline=set(strings(embedded.extract('music2picture_v3.renderer')))
+    assert {'chronological-organic-v2','timeline_fields'} <= timeline
     names={name.replace('\\','/') for name in archive.toc}
     for path in ('licenses/python/LICENSE.txt','licenses/numpy/LICENSE.txt','licenses/pillow/LICENSE.txt',
                  'licenses/tk/license.terms','licenses/pyinstaller/COPYING.txt'):
@@ -41,7 +44,7 @@ def main():
     with pefile.PE(args.exe) as executable:
         assert executable.FILE_HEADER.Machine==0x8664,'Not an x64 build'
         assert executable.OPTIONAL_HEADER.Subsystem==2,'Not a GUI build'
-    print('Verified x64 GUI, both engines, editable palettes, cleanup and license notices.')
+    print('Verified x64 GUI, all three engines, chronological rendering, palettes and license notices.')
 
 
 if __name__=='__main__':

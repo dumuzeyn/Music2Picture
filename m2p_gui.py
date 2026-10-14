@@ -12,7 +12,7 @@ from tkinter import colorchooser, filedialog, messagebox, ttk
 
 from PIL import Image, ImageTk
 
-from m2p_controls import (VERSION, COLOR_SCHEMES, MOODS, RenderOptions,
+from m2p_controls import (VERSION, ENGINES, COLOR_SCHEMES, MOODS, RenderOptions,
                           parse_colors, render_with_options)
 from music2picture_v2.renderer import COMPOSITIONS
 
@@ -38,7 +38,7 @@ def configure_tools():
 class Playground:
     def __init__(self, root):
         self.root = root
-        root.title(f'Music2Picture {VERSION} — M2Pv1 / M2Pv2')
+        root.title(f'Music2Picture {VERSION} — M2Pv1 / M2Pv2 / M2Pv3')
         root.geometry('1080x790')
         root.minsize(960, 730)
         root.configure(background='#f4f4fa')
@@ -92,7 +92,7 @@ class Playground:
         outer = ttk.Frame(self.root, padding=16)
         outer.pack(fill='both', expand=True)
         ttk.Label(outer, text='Музыка → изображение', style='Title.TLabel').pack(anchor='w')
-        ttk.Label(outer, text='M2Pv1 — классический узор · M2Pv2 — современная органическая обложка',
+        ttk.Label(outer, text='M2Pv1 — классика · M2Pv2 — органика · M2Pv3 — органика и структура песни слева → направо',
                   style='Note.TLabel').pack(anchor='w', pady=(3, 12))
         file_row = ttk.Frame(outer)
         file_row.pack(fill='x', pady=(0, 12))
@@ -117,7 +117,7 @@ class Playground:
         preview.pack(side='left', fill='both', expand=True)
         row = ttk.Frame(controls)
         row.pack(fill='x', pady=(0, 10))
-        for value in ('M2Pv1', 'M2Pv2'):
+        for value in ENGINES:
             ttk.Radiobutton(row, text=value, value=value, variable=self.engine).pack(side='left', padx=(0, 28))
         base = ttk.LabelFrame(controls, text='Вариант и детализация', padding=10)
         base.pack(fill='x', pady=(0, 10))
@@ -139,6 +139,9 @@ class Playground:
         self.modern_box.pack(fill='x', pady=(0, 10))
         self.composition_control = self._combo(self.modern_box, 'Композиция', self.composition, tuple(COMPOSITION_LABELS.values()))
         self.mood_control = self._combo(self.modern_box, 'Настроение', self.mood, tuple(MOOD_LABELS.values()))
+        self.timeline_note = ttk.Label(self.modern_box,
+            text='M2Pv3: слева начало, справа конец. Фон, цвет и плотность узора следуют изменениям песни.',
+            wraplength=400, style='Note.TLabel')
         palette = ttk.LabelFrame(controls, text='Цветовая схема', padding=10)
         self.palette_box = palette
         palette.pack(fill='x', pady=(0, 10))
@@ -211,6 +214,11 @@ class Playground:
 
     def _update_enabled(self):
         classic = self.engine.get() == 'M2Pv1'
+        timeline = self.engine.get() == 'M2Pv3'
+        self.modern_box.configure(text='M2Pv3: узор и структура песни' if timeline else 'M2Pv2: современный рисунок')
+        self.timeline_note.pack_forget()
+        if timeline:
+            self.timeline_note.pack(anchor='w', pady=(6, 0))
         self.classic_box.pack_forget()
         self.modern_box.pack_forget()
         (self.classic_box if classic else self.modern_box).pack(fill='x', pady=(0, 10), before=self.palette_box)
@@ -324,6 +332,8 @@ class Playground:
                 if self.classic_cache is not None and self.classic_cache[0] != key:
                     self.classic_cache = None
                 summary = bundle.song_description
+                if options.engine == 'M2Pv3':
+                    summary = 'M2Pv3: начало слева → конец справа; фон показывает спектр, активность и переходы песни. ' + summary
             self.events.put(('stage', 'Создание рисунка…'))
             render_options = options if kind == 'save' else replace(options, size=min(options.size, 1000))
             image = render_with_options(source, render_options, bundle=bundle, classic_analysis=classic)

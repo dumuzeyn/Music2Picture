@@ -14,7 +14,7 @@ def run(report_path):
     report = {'ok': False, 'checks': []}
     try:
         import tkinter as tk
-        from m2p_controls import RenderOptions, COLOR_SCHEMES, render_with_options, VERSION
+        from m2p_controls import RenderOptions, ENGINES, COLOR_SCHEMES, render_with_options, VERSION
         from m2p_gui import Playground
         from music2picture_v1 import analyze_track
         from music2picture_v2 import DEFAULT_PIPELINE
@@ -31,7 +31,7 @@ def run(report_path):
                 stream.writeframes((sound*32767).astype('<i2').tobytes())
             classic = analyze_track(source)
             bundle = DEFAULT_PIPELINE.analyse(source)
-            for engine in ('M2Pv1', 'M2Pv2'):
+            for engine in ENGINES:
                 for scheme in COLOR_SCHEMES:
                     options = RenderOptions(engine=engine, size=192, color_scheme=scheme, colors=('#112233','#EEAA88'))
                     image = render_with_options(source, options, classic_analysis=classic, bundle=bundle)
@@ -44,7 +44,7 @@ def run(report_path):
             app.automatic.set(False)
             app.path.set(str(source))
             app.size.set('256')
-            for engine in ('M2Pv1','M2Pv2'):
+            for engine in ENGINES:
                 app.engine.set(engine)
                 app.preview()
                 deadline = time.monotonic()+30
@@ -61,6 +61,9 @@ def run(report_path):
                 time.sleep(.01)
             assert (Path(directory)/'export.png').is_file(), app.status.get()
             assert (Path(directory)/'.m2p/export.profile.json').is_file()
+            profile = json.loads((Path(directory)/'.m2p/export.profile.json').read_text(encoding='utf-8'))
+            assert profile['engine'] == 'M2Pv3'
+            assert profile['timeline_direction'] == 'left_to_right'
             report['checks'].append('GUI PNG export and profile')
             app.close()
         report['ok'] = True

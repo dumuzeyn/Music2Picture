@@ -7,8 +7,8 @@ from PIL import ImageEnhance, ImageFilter
 from music2picture_v2.custom_style import CustomCoverSettings, palette_rgb
 from music2picture_v2.renderer import COMPOSITIONS
 
-VERSION = '2.1.0'
-ENGINES = ('M2Pv1', 'M2Pv2')
+VERSION = '2.2.0'
+ENGINES = ('M2Pv1', 'M2Pv2', 'M2Pv3')
 COLOR_SCHEMES = {
     'auto': (),
     'sunset': ('#25143B', '#64365E', '#AE4663', '#EE6A53', '#FFC078'),
@@ -40,7 +40,7 @@ class RenderOptions:
 
     def validated(self):
         if self.engine not in ENGINES:
-            raise ValueError('Choose M2Pv1 or M2Pv2')
+            raise ValueError('Choose M2Pv1, M2Pv2 or M2Pv3')
         if isinstance(self.size, bool) or not isinstance(self.size, int) or not 64 <= self.size <= 4096:
             raise ValueError('Size must be an integer from 64 to 4096')
         if isinstance(self.seed, bool) or not isinstance(self.seed, int) or not 0 <= self.seed <= 2**31 - 1:
@@ -50,7 +50,7 @@ class RenderOptions:
         if self.color_scheme not in COLOR_SCHEMES or self.mood not in MOODS:
             raise ValueError('Unknown palette or mood')
         if self.composition not in ('auto', *COMPOSITIONS):
-            raise ValueError('Unknown M2Pv2 composition')
+            raise ValueError('Unknown M2Pv2/M2Pv3 composition')
         if self.color_scheme == 'custom' and not self.colors:
             raise ValueError('Custom palette needs at least one #RRGGBB color')
         CustomCoverSettings.parse({
@@ -79,7 +79,7 @@ def finish_image(image, options):
     return image
 
 
-def render_with_options(path, options=None, *, bundle=None, classic_analysis=None, preview=False):
+def render_with_options(path, options=None, *, bundle=None, classic_analysis=None, song_structure=None, preview=False):
     path = Path(path).resolve()
     options = (options or RenderOptions()).validated()
     if options.engine == 'M2Pv1':
@@ -96,7 +96,11 @@ def render_with_options(path, options=None, *, bundle=None, classic_analysis=Non
     else:
         from music2picture_v2 import DEFAULT_PIPELINE, render_cover
         bundle = bundle or DEFAULT_PIPELINE.analyse(path, metadata={'title': path.stem}, mood_override=options.mood)
+        extra = {}
+        if options.engine == 'M2Pv3':
+            from music2picture_v3 import analyze_structure, render_cover
+            extra['structure'] = song_structure if song_structure is not None else analyze_structure(path)
         image = render_cover(bundle.visual_dna, bundle.visual_plan, size=options.size, seed=options.seed,
                              preview=preview, detail=options.detail, palette=options.palette or None,
-                             composition=None if options.composition == 'auto' else options.composition)
+                             composition=None if options.composition == 'auto' else options.composition, **extra)
     return finish_image(image, options)

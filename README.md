@@ -1,24 +1,25 @@
-# Music2Picture — M2Pv1 и M2Pv2
+# Music2Picture — M2Pv1, M2Pv2 и M2Pv3
 
 [![Windows EXE](https://img.shields.io/badge/Windows-EXE-6551c7?style=for-the-badge&logo=windows)](https://github.com/dumuzeyn/Music2Picture/releases/latest)
 [![Исходники](https://img.shields.io/badge/Исходники-Python-3776ab?style=for-the-badge&logo=python)](https://github.com/dumuzeyn/Music2Picture/releases/latest)
 [![English](https://img.shields.io/badge/Read-English-555?style=for-the-badge)](#english)
 
-Music2Picture превращает звучание в абстрактное квадратное изображение. Доступны **два разных алгоритма**, а не два названия одного фильтра:
+Music2Picture превращает звучание в абстрактное квадратное изображение. Доступны **три поколения алгоритма**:
 
 | Поколение | Принцип | Результат |
 | --- | --- | --- |
 | **M2Pv1** | Спектральная карта, громкость и частотные полосы деформируются случайными полями, связанными с энергией | Классические сложные узоры, изломы и тонкие цветные контуры |
 | **M2Pv2** | Многомерный анализ → VisualDNA → VisualPlan → органическая фактура | Потоки, складки, мраморные вихри, раскрытия и островки; характер звучания направляет выбор геометрии и цветов |
+| **M2Pv3** | Органический узор M2Pv2 поверх спектральной структуры песни | Начало слева, конец справа; фон, цвет и плотность узора показывают изменение характера песни во времени |
 
-Релиз **2.1.0** объединяет оба движка в **M2P-Studio.exe** с редактируемыми параметрами. M2Pv1/M2Pv2 — поколения алгоритма, 2.1.0 — версия пакета. Это отдельная площадка для экспериментов, не аудиоредактор SonicForge.
+**M2P-Studio.exe** объединяет три движка с редактируемыми параметрами. M2Pv1/M2Pv2/M2Pv3 — поколения алгоритма, 2.2.0 — версия пакета с M2Pv3. Это отдельная площадка для экспериментов, не аудиоредактор SonicForge.
 
 ## Windows: попробовать без Python
 
 1. Скачайте `M2P-Studio.exe` из [релиза](https://github.com/dumuzeyn/Music2Picture/releases/latest).
 2. Установите [FFmpeg](https://ffmpeg.org/download.html) и добавьте его `bin` в `PATH`. Альтернатива: рядом с EXE создайте папку `tools` и положите туда `ffmpeg.exe` и `ffprobe.exe`. **FFmpeg не включён в EXE**; без него аудио не декодируется.
 3. Запустите EXE и нажмите **«Выбрать песню…»**. Поддерживаются MP3, FLAC, WAV, M4A, AAC, OGG, Opus и WMA.
-4. Выберите M2Pv1 или M2Pv2. Дождитесь анализа: внизу показаны этап и движущийся индикатор.
+4. Выберите M2Pv1, M2Pv2 или M2Pv3. Дождитесь анализа: внизу показаны этап и движущийся индикатор.
 5. Меняйте параметры, палитру и Seed. При включённом автообновлении предпросмотр пересоздаётся после короткой паузы. Быстрые изменения не запускают параллельные рендеры.
 6. Нажмите **«Сохранить PNG…»**. Сохраняются полное изображение и JSON-профиль настроек.
 
@@ -28,15 +29,15 @@ Music2Picture превращает звучание в абстрактное к
 
 | Параметр | Диапазон | Что меняет |
 | --- | --- | --- |
-| Движок | M2Pv1 / M2Pv2 | Сам способ анализа и построения узора |
+| Движок | M2Pv1 / M2Pv2 / M2Pv3 | Сам способ анализа и построения узора |
 | Seed / «Другой вариант» | 0–2147483647 | Раскладку случайных полей. При одинаковой песне, версии, настройках и Seed результат повторяется. В авто-M2Pv2 семейство композиции по-прежнему выбирает музыка |
 | Размер, px | 64–4096; GUI предлагает 512/1000/2048/4096 | Размер итогового квадратного PNG, не дополнительную музыкальную детализацию |
 | Автоматическая детализация | Вкл. по умолчанию | M2Pv1 регулирует силу деталей по длительности/разнообразию; M2Pv2 сохраняет параметры, вычисленные из звука |
 | Детализация | 0–100, после отключения авто | M2Pv1 — силу контуров без замены геометрии; M2Pv2 — средние/мелкие структуры, прожилки и фактуру |
 | Режим цвета M2Pv1 | Ocean / Plasma / Fusion / Aurora | Четыре классических правила окраски, описанные ниже |
 | Узор M2Pv1 | 1 / 2 | 1 — основные деформации; 2 — дополнительные волны, изломы и гребни. По умолчанию 2, включая короткие песни |
-| Композиция M2Pv2 | Авто / пять семейств | Выбор по музыке либо ручной эксперимент при сохранении остальных измеренных характеристик |
-| Настроение M2Pv2 | По музыке / спокойнее / меланхоличнее / энергичнее / напряжённее / романтичнее | Мягкую поправку valence/arousal/tension: 72% исходной оценки + 28% выбранного направления, без изменения звука |
+| Композиция M2Pv2/M2Pv3 | Авто / пять семейств | Выбор по музыке либо ручной эксперимент при сохранении остальных измеренных характеристик |
+| Настроение M2Pv2/M2Pv3 | По музыке / спокойнее / меланхоличнее / энергичнее / напряжённее / романтичнее | Мягкую поправку valence/arousal/tension: 72% исходной оценки + 28% выбранного направления, без изменения звука |
 | Цветовая схема | Авто / пять готовых / своя | Выбор оттенков; геометрия сохраняется |
 | Свои цвета | Один или любое количество `#RRGGBB` через запятую | Упорядоченную палитру. Можно редактировать список и добавлять цвета через диалог. Позиции распределяются равномерно |
 | Контраст | 50–150% | Светотеневые различия; 100% — без дополнительной коррекции |
@@ -121,6 +122,24 @@ Seed создаёт несколько интерполированных слу
 Автоматическая детализация лежит примерно в 20–60, учитывает длительность и разброс энергии и регулирует силу деталей. Она **не заставляет короткую песню использовать упрощённый узор 1**. Рабочая сторона ограничена 1000 px; большой экспорт масштабируется Lanczos, без новых слоёв зерна.
 
 Код: [анализ и геометрия](music2picture_v1/core.py), [обёртка и размер](music2picture_v1/renderer.py).
+
+## M2Pv3 — узор и структура песни
+
+Реализация `chronological-organic-v2` сохраняет органические поля, складки и семейства композиции M2Pv2. Под ними расположена карта спектра, похожая на основу M2Pv1: нелинейная частотная шкала уделяет больше места низким частотам. **Горизонтальная ось — время: начало песни слева, конец справа.** Низкие частоты находятся внизу, высокие — вверху. Карта времени мягко изгибается, смещаясь менее чем на 4% ширины; порядок участков и крайние точки сохраняются. Спектральная подложка сглаживается отдельно, поэтому органический узор остаётся заметным без жёстких полос.
+
+Спектр, абсолютная громкость и атаки анализируются по всей записи с ограничением около 7500 FFT-окон и сводятся в карту до 128 × 256 точек. Общая активность берётся из анализа M2Pv2. Цвет, светлота, плотность складок и сила прожилок меняются в соответствующих временных участках: тихое вступление не окрашивается как самая активная часть только потому, что оно громче соседней паузы. Это художественная интерпретация структуры, не распознавание слов или инструментов.
+
+Спектр занимает 10% поля, локальная громкость — 6%, органический узор — 84%; затем они совместно направляют окраску и глубину. Готовые и свои палитры сохраняют порядок «спокойные → активные цвета»; он относится к активности участка, а не к времени. Поэтому спокойный финал возвращается к спокойным цветам. Параметры M2Pv2, включая детализацию и композицию, доступны и для M2Pv3. Настроение меняет общие художественные параметры, измеренная хронология сохраняется.
+
+![M2Pv2 и M2Pv3: тихое вступление, нарастание, активная середина и спокойный финал](docs/images/m2pv3-comparison.png)
+
+Кэш содержит до четырёх спектральных карт и проверяет путь, размер и время изменения файла. При первой генерации M2Pv3 звук декодируется отдельно для общего анализа и спектрального фона; изменения Seed, цветов и детализации используют готовые измерения. Рабочая сторона — до 640 px (384 при `preview=True`), экспорт до 4096 px масштабируется Lanczos. JSON-профиль сохраняет версию генератора и `timeline_direction: left_to_right`.
+
+```powershell
+python .\music2picture.py covers --source "C:\Music\song.mp3" --output "C:\Music\covers-v3" --engine M2Pv3 --color-scheme sunset --seed 42
+```
+
+Код: [анализ структуры](music2picture_v3/audio_analysis.py), [рендер и карта времени](music2picture_v3/renderer.py). Пример построен на синтетическом звуке: `python scripts/generate_v3_example.py`.
 
 ## M2Pv2 — подробно
 
@@ -234,7 +253,7 @@ python .\music2picture.py covers --source "C:\Music\song.mp3" --output "C:\Music
 python .\music2picture.py covers --source "C:\Music\song.mp3" --output "C:\Music\covers" --engine M2Pv2 --composition vortex_marbling --color-scheme custom --colors "#102040,#407090,#E07060" --contrast 110 --saturation 95 --softness 0 --center-title
 ```
 
-Готовая палитра: `--color-scheme sunset`, `ocean`, `neon`, `forest` или `mono`. Для автодетализации не указывайте `--detail`. `--mood`/`--composition` относятся только к M2Pv2; `--patterns`/`--color-mode` — только к M2Pv1.
+Готовая палитра: `--color-scheme sunset`, `ocean`, `neon`, `forest` или `mono`. Для автодетализации не указывайте `--detail`. `--mood`/`--composition` относятся к M2Pv2 и M2Pv3; `--patterns`/`--color-mode` — только к M2Pv1.
 
 Папки обходятся рекурсивно и последовательно с сохранением относительной структуры; ошибка одного трека не отменяет остальные. Для одного файла ошибка возвращается вызывающему коду.
 
@@ -275,7 +294,7 @@ python .\music2picture.py process --source "C:\Music\Input" --output "C:\Music\N
 
 - Нет распознавания слов/инструментов/жанров или точной транскрипции аккордов. Гармонические и эмоциональные оценки приблизительны.
 - Картинка художественно связана с признаками, но не доказывает «истинный характер» песни. Похожие признаки могут дать похожий вид.
-- Стерео сводится в моно. Оба анализатора декодируют запись целиком: очень длинные файлы требуют памяти. Ограничение FFT-окон M2Pv2 не равно полностью потоковой обработке.
+- Стерео сводится в моно. Анализаторы декодируют запись целиком: очень длинные файлы требуют памяти. Ограничение FFT-окон M2Pv2/M2Pv3 не равно полностью потоковой обработке.
 - Повторяемость требует одинаковых аудиоданных, ревизии движка, параметров, Seed и рабочего разрешения. Изменение алгоритма может изменить результат.
 - Музыка не отправляется на сервер. FFmpeg — отдельная локальная программа; это не гарантия отсутствия уязвимостей сторонних компонентов.
 - EXE — неподписанная Windows x64-сборка. Возможен SmartScreen: скачивайте здесь, проверяйте SHA256, **не отключайте защиту Windows**.
@@ -286,7 +305,7 @@ python -m pip install PyInstaller
 .\scripts\build_windows.ps1 -Python python
 ```
 
-[Релиз 2.1.0](docs/RELEASE-2.1.0.md), [сторонние компоненты](THIRD_PARTY_NOTICES.md), [тексты лицензий](licenses). FFmpeg не распространяется внутри EXE. Иллюстрации созданы из синтетического звука, не из личных песен.
+[Релиз 2.2.0](docs/RELEASE-2.2.0.md), [сторонние компоненты](THIRD_PARTY_NOTICES.md), [тексты лицензий](licenses). FFmpeg не распространяется внутри EXE. Иллюстрации созданы из синтетического звука, не из личных песен.
 
 Автор проекта: **Зейналов У.Р.о. (dumuzeyn)**.
 
@@ -299,7 +318,7 @@ python -m pip install PyInstaller
 [![Windows EXE](https://img.shields.io/badge/Windows-EXE-6551c7?style=for-the-badge&logo=windows)](https://github.com/dumuzeyn/Music2Picture/releases/latest)
 [![Source](https://img.shields.io/badge/Source-Python-3776ab?style=for-the-badge&logo=python)](https://github.com/dumuzeyn/Music2Picture/releases/latest)
 
-Two different algorithms are available: **M2Pv1** creates classic intricate artwork by warping spectral maps; **M2Pv2** derives organic geometry and palette usage from multidimensional musical characteristics. **2.1.0 is the package release**, not an algorithm-generation number. `M2P-Studio.exe` is an independent playground, not the SonicForge editor.
+Three algorithm generations are available: **M2Pv1** creates classic intricate artwork by warping spectral maps; **M2Pv2** derives organic geometry and palette usage from multidimensional musical characteristics; **M2Pv3** places organic folds over a chronological spectral background, with the opening on the left and the ending on the right. **2.2.0 is the package release** including M2Pv3, not an algorithm-generation number. `M2P-Studio.exe` is an independent playground, not the SonicForge editor.
 
 ### Windows quick start
 
@@ -315,7 +334,7 @@ Two different algorithms are available: **M2Pv1** creates classic intricate artw
 
 | Control | Range | Effect |
 | --- | --- | --- |
-| Engine | M2Pv1 / M2Pv2 | Changes the analysis/rendering method |
+| Engine | M2Pv1 / M2Pv2 / M2Pv3 | Changes the analysis/rendering method |
 | Seed / Другой вариант | 0–2147483647 | Varies field layout; M2Pv2 automatic composition still follows the music |
 | Size / px | 64–4096 | Final PNG size, not additional musical detail |
 | Automatic detail | Default on | Classic contour intensity adapts; modern parameters remain audio-derived |
@@ -429,6 +448,20 @@ Full rendering uses up to 640 px and Lanczos output resizing. GUI preview uses t
 
 Implementation: [analysis](music2picture_v2/audio_analysis.py), [semantics](music2picture_v2/semantics.py), [character/accents](music2picture_v2/character.py), [plan](music2picture_v2/visual_plan.py), [renderer](music2picture_v2/renderer.py).
 
+### M2Pv3: chronological background with organic folds
+
+`chronological-organic-v2` reuses the M2Pv2 organic renderer and composition families. A separate full-track spectral analysis provides a background with classic nonlinear frequency spacing: low frequencies at the bottom, high frequencies at the top, **opening at the left, ending at the right**. Time coordinates curve gently by less than 4% of the width while retaining section order and fixed endpoints. Separately smoothing the spectral backing avoids hard stripes while keeping organic folds visible. Absolute levels, attacks and M2Pv2 activity modulate local color, lighting, lamination and veins. A calm outro can return to calm colors after an energetic middle.
+
+The combined field contains 84% organic texture, 10% spectral background and 6% local level. Up to ~7500 FFT frames are pooled into a 128 × 256 map; absolute amplitude is retained. This is artistic musical structure, not instrument or lyric recognition. All modern composition, detail, mood and palette controls remain available. Mood changes artistic choices while measured chronology remains intact.
+
+![M2Pv2 versus M2Pv3 on a calm intro, build, driven middle and calm outro](docs/images/m2pv3-comparison.png)
+
+Four spectral maps are cached by path, size and modification time. The first generation decodes separately for the general analysis and spectral background; subsequent control changes reuse measurements. Full work resolution is capped at 640 px (384 for `preview=True`), with Lanczos resizing for larger exports. Profiles record the generator version and `timeline_direction: left_to_right`. See [analysis](music2picture_v3/audio_analysis.py) and [renderer](music2picture_v3/renderer.py).
+
+```powershell
+python .\music2picture.py covers --source "C:\Music\song.mp3" --output "C:\Music\covers-v3" --engine M2Pv3 --color-scheme sunset --seed 42
+```
+
 ### Source, CLI and API
 
 Source use needs Python 3.10+ with Tkinter, NumPy/Pillow and FFmpeg/FFprobe in PATH. Windows builds use Python 3.12 x64.
@@ -442,7 +475,7 @@ python .\music2picture.py covers --source "C:\Music\song.mp3" --output "C:\Music
 python .\music2picture.py describe --source "C:\Music\Input" --output "C:\Music\descriptions"
 ```
 
-Omit `--detail` for automatic settings. `--mood`/`--composition` apply to M2Pv2 only; `--patterns`/`--color-mode` to M2Pv1 only. Folder processing is recursive and sequential, preserving relative paths; one failed track does not cancel the rest. `describe` is M2Pv2-only and `--regenerate` refreshes descriptions.
+Omit `--detail` for automatic settings. `--mood`/`--composition` apply to M2Pv2 and M2Pv3; `--patterns`/`--color-mode` to M2Pv1 only. Folder processing is recursive and sequential, preserving relative paths; one failed track does not cancel the rest. `describe` uses the shared modern analysis and `--regenerate` refreshes descriptions.
 
 Description cache: `%LOCALAPPDATA%\Music2Picture\analysis\track_descriptions.json`, or home directory/Music2Picture without LOCALAPPDATA. Lookup checks path, size, mtime and pipeline version. Fingerprint is stored after analysis but not recalculated on each cache read. In-memory LRU holds at most 12 bundles. GUI reuses unchanged analysis and one rendering worker; Tkinter stays on the main thread.
 
@@ -465,7 +498,7 @@ Profiles include engine/release version, Seed, settings, source path and M2Pv2 A
 
 ### Limits and verification
 
-No word/instrument/genre recognition or exact chord transcription is performed; emotional/harmonic estimates are approximate. Similar features can produce similar artwork. Stereo is downmixed; both engines decode the full recording, so long files still need memory. Capped FFT frames are not fully streaming processing. Repeatability requires identical audio, engine revision, controls, Seed and working resolution. Algorithm changes can change output. Processing is local, but not a guarantee against third-party vulnerabilities.
+No word/instrument/genre recognition or exact chord transcription is performed; emotional/harmonic estimates are approximate. Similar features can produce similar artwork. Stereo is downmixed; all engines decode the full recording, so long files still need memory. Capped FFT frames are not fully streaming processing. Repeatability requires identical audio, engine revision, controls, Seed and working resolution. Algorithm changes can change output. Processing is local, but not a guarantee against third-party vulnerabilities.
 
 The EXE is unsigned Windows x64. SmartScreen warnings are possible: use this repository's release, verify `SHA256SUMS.txt`, and do not disable Windows protection.
 
@@ -475,6 +508,6 @@ python -m pip install PyInstaller
 .\scripts\build_windows.ps1 -Python python
 ```
 
-[Release notes](docs/RELEASE-2.1.0.md), [third-party notices](THIRD_PARTY_NOTICES.md), [license texts](licenses). FFmpeg is external, not bundled. README illustrations use synthetic sounds, not personal song recordings.
+[Release notes](docs/RELEASE-2.2.0.md), [third-party notices](THIRD_PARTY_NOTICES.md), [license texts](licenses). FFmpeg is external, not bundled. README illustrations use synthetic sounds, not personal song recordings.
 
 Project author: **Зейналов У.Р.о. / Zeynalov U.R.o. (dumuzeyn)**.
